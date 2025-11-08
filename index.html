@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serverless Student Registration: A Scalable AWS Solution</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #0a2540;       /* Deep Space Blue */
+            --secondary: #e0e0e0;     /* Silver Lining */
+            --accent: #00c0c7;        /* Electric Teal */
+            --light: #ffffff;
+            --dark: #333333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Open Sans', sans-serif;
+            background: linear-gradient(135deg, var(--primary), #003366);
+            color: var(--dark);
+            line-height: 1.6;
+            padding: 1rem;
+            min-height: 100vh;
+        }
+
+        .presentation-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            backdrop-filter: blur(10px);
+        }
+
+        .presentation-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(1.5rem, 5vw, 2.5rem);
+            color: var(--light);
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .subtitle {
+            font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+            color: var(--secondary);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .developer-credit {
+            margin-top: 1rem;
+            font-size: clamp(0.8rem, 2vw, 1rem);
+            color: var(--accent);
+            font-style: italic;
+        }
+
+        .slide {
+            background: var(--light);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            margin-bottom: 2rem;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: opacity, transform;
+        }
+
+        .slide.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .slide-content {
+            transition: opacity 0.6s ease-out 0.3s;
+        }
+
+        .slide:not(.active) .slide-content {
+            opacity: 0;
+        }
+
+        .slide-title {
+            font-family: 'Montserrat', sans-serif;
+            background-color: var(--primary);
+            color: var(--light);
+            padding: 1.2rem 2rem;
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            margin: 0;
+        }
+
+        .slide-content {
+            padding: 1.5rem;
+        }
+
+        .two-column {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .image-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .slide-image {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .text-content {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .key-points {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .key-point {
+            background: var(--secondary);
+            padding: 0.6rem 1.2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: clamp(0.8rem, 2vw, 0.95rem);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .key-point:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .augmented-info {
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            line-height: 1.7;
+            color: #444;
+        }
+
+        .visualization-caption {
+            font-style: italic;
+            color: #666;
+            font-size: clamp(0.8rem, 2vw, 0.9rem);
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--secondary);
+        }
+
+        /* Visualization: Flowchart for "The Problem" */
+        .flowchart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .flow-step {
+            position: relative;
+            background: var(--secondary);
+            padding: 1.2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+            font-weight: 600;
+            font-size: clamp(0.9rem, 2.5vw, 1rem);
+        }
+
+        .flow-step:not(:last-child)::after {
+            content: "";
+            position: absolute;
+            bottom: -1.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 1.5rem;
+            background: var(--accent);
+        }
+
+        .flow-icon {
+            font-size: clamp(1.2rem, 3vw, 1.5rem);
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        /* Visualization: Comparison for "The Solution" */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .comparison-column {
+            padding: 1.2rem;
+            border-radius: 12px;
+        }
+
+        .old-system {
+            background: #f8d7da;
+            border: 1px solid #f5c2c7;
+        }
+
+        .new-system {
+            background: #d1e7dd;
+            border: 1px solid #badbcc;
+        }
+
+        .system-title {
+            font-family: 'Montserrat', sans-serif;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid currentColor;
+            font-size: clamp(1rem, 3vw, 1.2rem);
+        }
+
+        .comparison-list {
+            list-style: none;
+        }
+
+        .comparison-list li {
+            padding: 0.7rem 0;
+            display: flex;
+            align-items: flex-start;
+            font-size: clamp(0.85rem, 2.5vw, 1rem);
+        }
+
+        .comparison-list li::before {
+            content: "•";
+            margin-right: 0.7rem;
+            font-size: 1.2rem;
+        }
+
+        .new-system .comparison-list li::before {
+            color: var(--accent);
+        }
+
+        /* Visualization: Icon Grid for "Key Benefits" */
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .icon-item {
+            text-align: center;
+            padding: 1.2rem;
+            background: rgba(0, 192, 199, 0.1);
+            border-radius: 12px;
+            transition: transform 0.3s ease;
+        }
+
+        .icon-item:hover {
+            transform: translateY(-5px);
+        }
+
+        .benefit-icon {
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            color: var(--accent);
+            margin-bottom: 1rem;
+        }
+
+        .benefit-text {
+            font-weight: 600;
+            font-size: clamp(0.8rem, 2.5vw, 1rem);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 900px) {
+            .two-column {
+                grid-template-columns: 1fr;
+            }
+            
+            .image-container {
+                order: -1;
+            }
+            
+            .comparison {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 0.5rem;
+            }
+            
+            .header {
+                padding: 1rem;
+                margin-bottom: 1.5rem;
+            }
+            
+            .slide {
+                margin-bottom: 1.5rem;
+            }
+            
+            .slide-content {
+                padding: 1rem;
+            }
+            
+            .key-points {
+                gap: 0.5rem;
+            }
+            
+            .key-point {
+                padding: 0.5rem 1rem;
+            }
+            
+            .flow-step {
+                width: 95%;
+                padding: 1rem;
+            }
+            
+            .icon-grid {
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 1rem;
+            }
+        }
+        
+        @media (max-width: 400px) {
+            .key-points {
+                justify-content: center;
+            }
+            
+            .key-point {
+                flex: 1 1 calc(50% - 0.5rem);
+                min-width: 120px;
+                text-align: center;
+            }
+            
+            .flow-step {
+                font-size: 0.9rem;
+            }
+            
+            .icon-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Developer credit animation */
+        .developer-credit {
+            position: relative;
+            text-align: center;
+            font-family: "Raleway", sans-serif;
+            color: #fff;
+            letter-spacing: 1px;
+            margin-top: 1.5rem;
+            text-shadow: 0 0 10px #6c63ff;
+            overflow: hidden;
+        }
+        
+        .developer-credit::after {
+            content: "";
+            position: absolute;
+            top: 75%;
+            left: -10%;
+            width: 200%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #6c63ff, transparent);
+            animation: scan 3s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .developer-credit span {
+            color: #b388ff;
+            font-weight: 700;
+        }
+
+        /* References slide styles */
+        .knowledge-list {
+            list-style: none;
+            margin: 1.5rem auto 0;
+            font-size: 1.2rem;
+            color: #fff;
+        }
+
+        .slide {
+            min-height: 250px;
+            padding-bottom: 2rem;
+            max-width: 900px;
+            margin: 0 auto;
+            box-sizing: border-box;
+            width: 100%;
+        }
+
+        .knowledge-list li {
+            margin-bottom: 1rem;
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeSlideUp 1s ease forwards;
+        }
+
+        .knowledge-list li:nth-child(1) { animation-delay: 1s; }
+        .knowledge-list li:nth-child(2) { animation-delay: 1.5s; }
+        .knowledge-list li:nth-child(3) { animation-delay: 2s; }
+        .knowledge-list li:nth-child(4) { animation-delay: 2.5s; }
+
+        .knowledge-list a {
+            color: #4fc3f7;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .knowledge-list a:hover,
+        .knowledge-list a:focus {
+            color: #81d4fa;
+            text-decoration: underline;
+        }
+
+        @keyframes fadeSlideUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Thank You slide styles */
+        .thank-you-slide {
+            position: relative;
+            background: linear-gradient(135deg, #0a2540, #003366);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 90vh;
+            max-width:100%;
+            text-align: center;
+            color: #e0f7fa;
+            font-family: 'Montserrat', sans-serif;
+            padding: 0 1rem;
+            box-shadow: inset 0 0 150px rgba(0, 192, 199, 0.3);
+            border-radius: 16px;
+            overflow: hidden;
+            perspective: 1000px;
+            z-index: 0;
+        }
+
+        #confetti-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .thank-you-slide * {
+            background: none !important;
+            background-color: transparent !important;
+            box-shadow: none !important;
+            border: none !important;
+            margin: 0;
+            padding: 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .thank-you-slide .slide-title {
+            font-size: clamp(2rem, 6vw, 4rem);
+            font-weight: 800;
+            color: #00bcd4;
+            text-shadow: 0 4px 8px rgba(0, 188, 212, 0.6);
+            animation: blinkText 1.5s linear infinite;
+        }
+
+        .thank-you-slide .thank-you-message {
+            font-size: clamp(1rem, 3vw, 1.6rem);
+            margin-top: 1.2rem;
+            color: #b2ebf2;
+            letter-spacing: 0.03em;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeSlideUp 1s ease-out 1.3s forwards;
+        }
+
+        .thank-you-slide .contact-info {
+            font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+            margin-top: 1rem;
+            font-style: italic;
+            color: #80deea;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeSlideUp 1s ease-out 1.8s forwards;
+        }
+
+        .thank-you-slide .developer-signature {
+            font-size: clamp(0.8rem, 2.2vw, 1.1rem);
+            margin-top: 1.5rem;
+            color: var(--accent);
+            font-style: italic;
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeSlideUp 1s ease-out 2.3s forwards;
+        }
+
+        @keyframes blinkText {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0;
+            }
+        }
+
+        /* Touch-friendly improvements */
+        @media (hover: none) {
+            .key-point:hover {
+                transform: none;
+                box-shadow: none;
+            }
+            
+            .icon-item:hover {
+                transform: none;
+            }
+            
+            .key-point:active {
+                transform: scale(0.95);
+            }
+            
+            .icon-item:active {
+                transform: scale(0.95);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="presentation-container">
+        <header class="header">
+            <h1 class="presentation-title">Serverless Student Registration: A Scalable AWS Solution</h1>
+            <p class="subtitle">A fully automated, serverless system for course registration built on AWS services</p>
+            <p class="developer-credit">Developed by <span>Shivansh Gupta</span></p>
+        </header>
+
+        <!-- Slide 1: Serverless Student Registration -->
+        <section class="slide">
+            <h2 class="slide-title">Serverless Student Registration</h2>
+            <div class="slide-content">
+                <div class="two-column">
+                    <div class="image-container">
+                        <img src="https://pictures-storage.storage.eu-north1.nebius.cloud/text2img-215e3537-7b36-44b6-9c81-d1123df10aa3_00001_.webp" 
+                             alt="Digital cloud with data streams flowing into AWS logo" 
+                             class="slide-image">
+                    </div>
+                    <div class="text-content">
+                        <div class="key-points">
+                            <span class="key-point">Scalable</span>
+                            <span class="key-point">Reliable</span>
+                            <span class="key-point">Real-time</span>
+                            <span class="key-point">AWS Free Tier</span>
+                        </div>
+                        <p class="augmented-info">A fully automated, serverless system for course registration built on AWS services that eliminates infrastructure management while ensuring scalability and reliability.</p>
+                        <footer class="visualization-caption">Visualization: Gradient background with abstract cloud and data flow elements</footer>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 2: The Problem -->
+        <section class="slide">
+            <h2 class="slide-title">The Problem</h2>
+            <div class="slide-content">
+                <div class="key-points">
+                    <span class="key-point">Duplicate entries</span>
+                    <span class="key-point">Delayed updates</span>
+                    <span class="key-point">Teacher overload</span>
+                </div>
+                <p class="augmented-info">Traditional registration systems often struggle with inefficiencies that lead to administrative headaches including data duplication, processing delays, and excessive manual workloads.</p>
+                
+                <!-- Visualization: CSS Flowchart -->
+                <div class="flowchart">
+                    <div class="flow-step">
+                        <div class="flow-icon"><i class="fas fa-copy"></i></div>
+                        <div>Duplicate entries clog the system</div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-icon"><i class="fas fa-clock"></i></div>
+                        <div>Delayed updates frustrate users</div>
+                    </div>
+                    <div class="flow-step">
+                        <div class="flow-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <div>Teachers overwhelmed with manual work</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 3: The Solution -->
+        <section class="slide">
+            <h2 class="slide-title">The Solution</h2>
+            <div class="slide-content">
+                <div class="key-points">
+                    <span class="key-point">✓ Serverless AWS Registration System</span>
+                    <span class="key-point">✓ Eliminates duplicates</span>
+                    <span class="key-point">✓ Real-time teacher notifications</span>
+                    <span class="key-point">✓ Scales automatically</span>
+                </div>
+                <p class="augmented-info">A serverless architecture that automates the entire registration process, validating entries in real-time while ensuring seamless scalability.</p>
+                
+                <!-- Visualization: Side-by-Side Comparison -->
+                <div class="comparison">
+                    <div class="comparison-column old-system">
+                        <h3 class="system-title">Traditional System</h3>
+                        <ul class="comparison-list">
+                            <li>Manual duplicate checks</li>
+                            <li>Batch processing delays</li>
+                            <li>Email notifications sent manually</li>
+                            <li>Struggles during peak loads</li>
+                        </ul>
+                    </div>
+                    <div class="comparison-column new-system">
+                        <h3 class="system-title">Serverless Solution</h3>
+                        <ul class="comparison-list">
+                            <li>Real-time duplicate prevention</li>
+                            <li>Instant processing of registrations</li>
+                            <li>Automated teacher notifications</li>
+                            <li>Automatic scaling for any load</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 4: Architecture -->
+        <section class="slide">
+            <h2 class="slide-title">Architecture</h2>
+            <div class="slide-content">
+                <div class="two-column">
+                    <div class="image-container">
+                        <img src="https://pictures-storage.storage.eu-north1.nebius.cloud/text2img-3c762632-0f84-4b27-b6ec-90bb3bc4b5fb_00001_.webp" 
+                             alt="AWS services connected by data streams in isometric design" 
+                             class="slide-image">
+                    </div>
+                    <div class="text-content">
+                        <div class="key-points">
+                            <span class="key-point">Student → API Gateway → Lambda</span>
+                            <span class="key-point">DynamoDB → SES → Teacher</span>
+                        </div>
+                        <p class="augmented-info">The flow of data from student registration to teacher notification through AWS services: S3 hosts the form, API Gateway routes requests, Lambda processes data, DynamoDB stores records, and SES sends notifications.</p>
+                        <footer class="visualization-caption">Visualization: Flowchart illustrating data flow between AWS services</footer>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 5: Key Benefits -->
+        <section class="slide">
+            <h2 class="slide-title">Key Benefits</h2>
+            <div class="slide-content">
+                <div class="key-points">
+                    <span class="key-point">✓ No server management</span>
+                    <span class="key-point">✓ Handles thousands of students</span>
+                    <span class="key-point">✓ Real-time notifications</span>
+                    <span class="key-point">✓ Free Tier eligible</span>
+                    <span class="key-point">✓ Enterprise AWS infrastructure</span>
+                </div>
+                <p class="augmented-info">The serverless approach provides enterprise-grade reliability without infrastructure complexity, reducing costs while improving scalability and maintainability.</p>
+                
+                <!-- Visualization: Icon Grid -->
+                <div class="icon-grid">
+                    <div class="icon-item">
+                        <div class="benefit-icon"><i class="fas fa-cloud"></i></div>
+                        <div class="benefit-text">No server management (serverless)</div>
+                    </div>
+                    <div class="icon-item">
+                        <div class="benefit-icon"><i class="fas fa-users"></i></div>
+                        <div class="benefit-text">Handles thousands of students seamlessly</div>
+                    </div>
+                    <div class="icon-item">
+                        <div class="benefit-icon"><i class="fas fa-bolt"></i></div>
+                        <div class="benefit-text">Real-time notifications</div>
+                    </div>
+                    <div class="icon-item">
+                        <div class="benefit-icon"><i class="fas fa-tag"></i></div>
+                        <div class="benefit-text">Free Tier eligible (low cost)</div>
+                    </div>
+                    <div class="icon-item">
+                        <div class="benefit-icon"><i class="fab fa-aws"></i></div>
+                        <div class="benefit-text">Built on enterprise AWS infrastructure</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 6: Future Scope -->
+        <section class="slide">
+            <h2 class="slide-title">Future Scope</h2>
+            <div class="slide-content">
+                <div class="two-column">
+                    <div class="image-container">
+                        <img src="https://pictures-storage.storage.eu-north1.nebius.cloud/text2img-f11c9340-dc8e-4472-96aa-29aeafba710c_00001_.webp" 
+                             alt="Futuristic dashboard with analytics and student icons" 
+                             class="slide-image">
+                    </div>
+                    <div class="text-content">
+                        <div class="key-points">
+                            <span class="key-point">Multi-course support</span>
+                            <span class="key-point">Student dashboards</span>
+                            <span class="key-point">Confirmation emails</span>
+                            <span class="key-point">Analytics & reporting</span>
+                        </div>
+                        <p class="augmented-info">Potential enhancements include comprehensive student portals, expanded course management capabilities, automated confirmations, and data-driven insights through analytics.</p>
+                        <footer class="visualization-caption">Visualization: Timeline showing roadmap for future features</footer>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 7: References -->
+        <section class="slide">
+            <h2 class="slide-title">References</h2>
+            <div class="slide-content">
+                <div class="two-column">
+                    <!-- Left side: Image -->
+                    <div class="image-container">
+                        <img src="https://cdn-icons-png.flaticon.com/512/2933/2933884.png"
+                             alt="Books or documentation icon"
+                             class="slide-image">
+                    </div>
+
+                    <!-- Right side: Text content -->
+                    <div class="text-content">
+                        <div class="key-points">
+                            <a href="https://aws.amazon.com/lambda/features/" target="_blank" rel="noopener noreferrer" class="key-point">
+                                Official AWS Lambda Features
+                            </a>
+                            <a href="https://aws.amazon.com/lambda/security-overview-of-aws-lambda/" target="_blank" rel="noopener noreferrer" class="key-point">
+                                AWS Lambda Security Overview
+                            </a>
+                            <a href="https://docs.aws.amazon.com/lambda/latest/dg/foundation-progmodel.html" target="_blank" rel="noopener noreferrer" class="key-point">
+                                Understanding the Lambda Programming Model
+                            </a>
+                            <a href="https://docs.aws.amazon.com/lambda/latest/dg/best-practices.html" target="_blank" rel="noopener noreferrer" class="key-point">
+                                AWS Lambda Best Practices
+                            </a>
+                        </div>
+                        <p class="augmented-info">
+                            These links provide comprehensive information on AWS Lambda, covering features, programming models, security guidelines, and best practices for development.
+                        </p>
+                        <footer class="visualization-caption">
+                            Visualization: Key references supporting this project
+                        </footer>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Slide 8: Thank You -->
+        <section class="slide thank-you-slide">
+            <h2 class="slide-title">Thank You!</h2>
+            <p class="thank-you-message">We appreciate your attention and participation!</p>
+            <p class="contact-info">For any questions or further information, feel free to reach out.</p>
+            <p class="developer-signature">Developed by Shivansh Gupta</p>
+            <canvas id="confetti-canvas"></canvas>
+        </section>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const slides = document.querySelectorAll('.slide');
+            
+            // Show first slide immediately
+            if (slides.length > 0) {
+                slides[0].classList.add('active');
+            }
+            
+            // Intersection Observer for slide transitions
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                    } else {
+                        entry.target.classList.remove('active');
+                    }
+                });
+            }, {
+                threshold: 0.3,
+                rootMargin: '0px 0px -100px 0px'
+            });
+
+            // Observe all slides
+            slides.forEach(slide => {
+                observer.observe(slide);
+            });
+
+            // Confetti animation for thank you slide
+            const confettiCanvas = document.getElementById('confetti-canvas');
+            if (confettiCanvas) {
+                const ctx = confettiCanvas.getContext('2d');
+                let W, H;
+                const confettiCount = 150;
+                const confetti = [];
+
+                function randomRange(min, max) {
+                    return Math.random() * (max - min) + min;
+                }
+
+                class Confetto {
+                    constructor() {
+                        this.x = randomRange(0, W);
+                        this.y = randomRange(-H, 0);
+                        this.size = randomRange(5, 12);
+                        this.speed = randomRange(1, 3);
+                        this.angle = randomRange(0, 2 * Math.PI);
+                        this.color = `hsl(${randomRange(0, 360)}, 70%, 60%)`;
+                        this.swing = randomRange(0.02, 0.05);
+                        this.drift = randomRange(-0.5, 0.5);
+                        this.tilt = 0;
+                        this.tiltSpeed = randomRange(0.05, 0.1);
+                    }
+                    update() {
+                        this.y += this.speed;
+                        this.x += this.drift + Math.sin(this.angle) * 2;
+                        this.angle += this.swing;
+                        this.tilt += this.tiltSpeed;
+                        if (this.y > H) {
+                            this.y = randomRange(-20, -10);
+                            this.x = randomRange(0, W);
+                        }
+                        if (this.x > W) this.x = 0;
+                        if (this.x < 0) this.x = W;
+                    }
+                    draw() {
+                        ctx.save();
+                        ctx.translate(this.x, this.y);
+                        ctx.rotate(this.tilt);
+                        ctx.fillStyle = this.color;
+                        ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size / 2);
+                        ctx.restore();
+                    }
+                }
+
+                function setup() {
+                    W = window.innerWidth;
+                    H = window.innerHeight;
+                    confettiCanvas.width = W;
+                    confettiCanvas.height = H;
+                    for(let i = 0; i < confettiCount; i++) {
+                        confetti.push(new Confetto());
+                    }
+                }
+
+                function loop() {
+                    ctx.clearRect(0, 0, W, H);
+                    confetti.forEach(c => {
+                        c.update();
+                        c.draw();
+                    });
+                    requestAnimationFrame(loop);
+                }
+
+                window.addEventListener('resize', () => {
+                    W = window.innerWidth;
+                    H = window.innerHeight;
+                    confettiCanvas.width = W;
+                    confettiCanvas.height = H;
+                });
+
+                setup();
+                loop();
+            }
+        });
+    </script>
+</body>
+</html>
